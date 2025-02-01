@@ -134,6 +134,10 @@
     <script>
     let expenses = [];
 let monthlyBudget = 0;
+function clearh(){
+    localStorage.removeItem('expenses');
+}
+        
 
 // טעינת נתונים מה-localStorage כאשר הדף נטען
 function loadData() {
