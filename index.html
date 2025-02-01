@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מעקב הוצאות חודשיות</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            direction: rtl;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .form-container, .chart-container, .expenses-list, .budget-container {
+            background-color: #fff;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select, button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            padding: 10px;
+            text-align: right;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f8f9fa;
+        }
+        canvas {
+            max-width: 100%;
+            height: 300px;
+        }
+        #amount, #date{ width:235px}
+        #category{width:255px;}
+    
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <h1>מעקב הוצאות חודשיות</h1>
+
+    <!-- טופס הוספת הוצאה -->
+    <div class="form-container">
+        <label for="category">קטגוריה:</label>
+        <select id="category">
+            <option value="ארנונה">ארנונה</option>
+            <option value="חשמל">חשמל</option>
+            <option value="מים">מים</option>
+            <option value="גז">גז</option>
+            <option value="שכר דירה">שכר דירה</option>
+            <option value="אירועים">אירועים</option>
+            <option value="מסעדות">מסעדות</option>
+            <option value="חו''ל">חו"ל</option>
+            <option value="בית אבות">בית אבות</option>
+        </select>
+
+        <label for="amount">סכום:</label>
+        <input type="number" id="amount" step="0.01" required>
+
+        <label for="date">תאריך:</label>
+        <input type="date" id="date" required>
+
+        <button onclick="addExpense()">הוסף הוצאה</button>
+    </div>
+
+    <!-- גרף התפלגות -->
+    <div class="chart-container">
+        <h2>גרף התפלגות הוצאות</h2>
+        <canvas id="expenseChart"></canvas>
+    </div>
+
+    <!-- רשימת הוצאות -->
+    <div class="expenses-list">
+        <h2>רשימת הוצאות</h2>
+        <table id="expensesTable">
+            <thead>
+                <tr>
+                    <th>קטגוריה</th>
+                    <th>סכום</th>
+                    <th>תאריך</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- תקציב חודשי -->
+    <div class="budget-container">
+        <h2>תקציב חודשי</h2>
+        <label for="monthlyBudget">הכנס תקציב חודשי:</label>
+        <input type="number" id="monthlyBudget" step="0.01">
+        <button onclick="setBudget()">הגדר תקציב</button>
+        <p>סך ההוצאות: <span id="totalExpenses">0</span></p>
+        <p>יתרה: <span id="remainingBudget">0</span></p>
+    </div>
+
+    <script>
+    let expenses = [];
+let monthlyBudget = 0;
+
+// טעינת נתונים מה-localStorage כאשר הדף נטען
+function loadData() {
+    const savedExpenses = localStorage.getItem('expenses');
+    if (savedExpenses) {
+        expenses = JSON.parse(savedExpenses);
+    }
+
+    const savedBudget = localStorage.getItem('monthlyBudget');
+    if (savedBudget) {
+        monthlyBudget = parseFloat(savedBudget);
+        document.getElementById('monthlyBudget').value = monthlyBudget;
+    }
+
+    updateExpensesList();
+    updateChart();
+    updateBudget();
+}
+
+// שמירת נתונים ב-localStorage
+function saveData() {
+    localStorage.setItem('expenses', JSON.stringify(expenses));
+    localStorage.setItem('monthlyBudget', monthlyBudget.toString());
+}
+
+// פונקציה להוספת הוצאה
+function addExpense() {
+    const category = document.getElementById('category').value;
+    const amount = parseFloat(document.getElementById('amount').value);
+    const date = document.getElementById('date').value;
+
+    if (!category || !amount || !date) {
+        alert('נא למלא את כל השדות');
+        return;
+    }
+
+    expenses.push({ category, amount, date });
+    updateExpensesList();
+    updateChart();
+    updateBudget();
+    saveData(); // שמירת הנתונים לאחר הוספת הוצאה
+    document.getElementById('amount').value = '';
+    document.getElementById('date').value = '';
+}
+
+// פונקציה לעדכון רשימת ההוצאות
+function updateExpensesList() {
+    const tbody = document.querySelector('#expensesTable tbody');
+    tbody.innerHTML = '';
+    expenses.forEach(expense => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${expense.category}</td>
+            <td>${expense.amount.toLocaleString()}</td>
+            <td>${expense.date}</td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+// פונקציה לעדכון הגרף
+function updateChart() {
+    const categories = [...new Set(expenses.map(expense => expense.category))];
+    const data = categories.map(category => {
+        return expenses.filter(expense => expense.category === category)
+                      .reduce((sum, expense) => sum + expense.amount, 0);
+    });
+
+    const ctx = document.getElementById('expenseChart').getContext('2d');
+    if (window.myChart) {
+        window.myChart.destroy();
+    }
+    window.myChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: categories,
+            datasets: [{
+                data: data,
+                backgroundColor: [
+                    '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0',
+                    '#9966FF', '#FF9F40', '#C9CBCF', '#FFCD56',
+                    '#4DC0C0'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                }
+            }
+        }
+    });
+}
+
+// פונקציה לעדכון התקציב
+function updateBudget() {
+    const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+    document.getElementById('totalExpenses').textContent = totalExpenses.toLocaleString();
+    document.getElementById('remainingBudget').textContent = (monthlyBudget - totalExpenses).toLocaleString();
+}
+
+// פונקציה להגדרת תקציב
+function setBudget() {
+    monthlyBudget = parseFloat(document.getElementById('monthlyBudget').value);
+    updateBudget();
+    saveData(); // שמירת הנתונים לאחר הגדרת תקציב
+}
+
+// טעינת הנתונים כאשר הדף נטען
+window.onload = loadData;
+    </script>
+</body>
+</html>
