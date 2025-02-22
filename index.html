@@ -73,6 +73,7 @@
             width: 100%;
             border-collapse: collapse;
             margin-top: 10px;
+            font-size: 10px;
         }
 
         th, td {
@@ -96,27 +97,17 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <div class="container">
+  
+    <div class="container" id='container'>
         <h1>מעקב הוצאות חודשיות</h1>
 
         <!-- טופס הוספת הוצאה -->
         <div class="form-container">
+         
             <label for="category">קטגוריה:</label>
-            <select id="category">
-                <option value="מזון">מזון</option>
-                <option value="ביגוד">ביגוד</option>
-                <option value="דלק">דלק</option>
-                <option value="רכב">רכב</option>
-                <option value="ארנונה">ארנונה</option>
-                <option value="חשמל">חשמל</option>
-                <option value="מים">מים</option>
-                <option value="גז">גז</option>
-                <option value="שכר דירה">שכר דירה</option>
-                <option value="אירועים">אירועים</option>
-                <option value="מסעדות">מסעדות</option>
-                <option value="חו''ל">חו"ל</option>
-                <option value="בית אבות">בית אבות</option>
-            </select>
+<select id="category">
+  <option selected="" disabled="true">בחר קטגוריה</option>
+</select>
 
             <label for="amount">סכום:</label>
             <input type="number" id="amount" step="0.01" required>
@@ -164,9 +155,18 @@
     </div>
 
     <script>
-        let expenses = [];
-        let monthlyBudget = 0;
+      const expenseslist = ['לק גל', 'סטודיו', 'מסעדות ויציאות', 'קונגו', 'קניות לבסיס ושקם', 'טיפוח לפנים', 'טיפוח לשיער', 'איפור, בגדים', 'גבות שפם', 'נעליים ותיקים', 'תכשיטים'];
+let expenses = [];
+let monthlyBudget = 0;
 
+const select = document.getElementById('category');
+
+for (let i = 0; i < expenseslist.length; i++) {
+  const opt = document.createElement("option"); // תיקון השגיאה
+  opt.value = expenseslist[i];
+  opt.textContent = expenseslist[i];
+  select.appendChild(opt);
+}
         function clearExpenses() {
             localStorage.removeItem('expenses');
             expenses = [];
@@ -200,8 +200,10 @@
         function addExpense() {
             const category = document.getElementById('category').value;
             const amount = parseFloat(document.getElementById('amount').value);
-            const date = document.getElementById('date').value;
-
+            var date = document.getElementById('date').value;
+console.log(date.slice(0,4),date.slice(5,7),date.slice(8,10))
+date=date.slice(8,10)+'.'+
+date.slice(5,7)+'.'+date.slice(0,4);
             if (!category || !amount || !date) {
                 alert('נא למלא את כל השדות');
                 return;
@@ -291,6 +293,9 @@ function updateChart() {
         }
 
         window.onload = loadData;
+        
+        
     </script>
 </body>
 </html>
+
